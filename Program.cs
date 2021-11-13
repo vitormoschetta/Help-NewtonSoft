@@ -11,7 +11,7 @@ namespace Help_NewtonSoft
     {
         static void Main(string[] args)
         {
-            AnonymousType();
+            Process();
         }
 
         private static void Process()
@@ -29,11 +29,6 @@ namespace Help_NewtonSoft
             primeiraOrdem = jToken.First();
             JToken nomeCliente = jToken.First()["Customer"]["Name"];
             string nomeRuaClienteMora = jToken.First()["Customer"]["Address"]["Street"].ToString();
-
-
-            string jsonIdented = JsonConvert.SerializeObject(orders, Formatting.Indented);
-            Console.WriteLine(jsonIdented);
-
         }
 
         private static void PrintIdented()
