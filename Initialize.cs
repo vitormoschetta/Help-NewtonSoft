@@ -6,6 +6,15 @@ namespace Help_NewtonSoft
 {
     public static class Initialize
     {
+        public static object GetTransaction()
+        {
+            return new
+            {
+                TransactionId = Guid.NewGuid(),
+                Orders = InitOrders()
+            };
+        }
+
         public static List<Order> InitOrders()
         {
             return new List<Order>()

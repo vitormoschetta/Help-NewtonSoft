@@ -11,55 +11,93 @@ namespace Help_NewtonSoft
     {
         static void Main(string[] args)
         {
-            Process();
+            JTokenSample1();
         }
 
-        private static void Process()
+
+        private static void SerializeSample()
+        {
+            var transaction = Initialize.GetTransaction();
+            string json = JsonConvert.SerializeObject(transaction);
+            transaction = JsonConvert.DeserializeObject<object>(json);
+        }
+
+
+        private static void AnonymousType()
+        {
+            string json = GetSerializedTransaction();
+
+            // Quando não queremos construir classes para deserializar JSON, podemos usar objetos anonimos:
+            var definition = new
+            {
+                TransactionId = "",
+                Orders = new List<object>()
+            };
+
+            var transaction = JsonConvert.DeserializeAnonymousType(json, definition);
+
+            var primeiraOrdem = transaction.Orders.First();
+
+            Console.WriteLine($"Transaction: {transaction.TransactionId}; Order: {primeiraOrdem}");
+        }
+
+
+
+        private static void SerializeIdentedJSON()
         {
             List<Order> orders = Initialize.InitOrders();
 
-            string json = JsonConvert.SerializeObject(orders); 
-
-            orders = JsonConvert.DeserializeObject<List<Order>>(json);
-            
-            // Se não quiser criar classes para deserializar, e ainda trabalhar Linq C#:
-            JToken jToken = JToken.Parse(json);
-            JToken primeiraOrdem = jToken[0];
-            // or:
-            primeiraOrdem = jToken.First();
-            JToken nomeCliente = jToken.First()["Customer"]["Name"];
-            string nomeRuaClienteMora = jToken.First()["Customer"]["Address"]["Street"].ToString();
-        }
-
-        private static void PrintIdented()
-        {
-            List<Order> orders = Initialize.InitOrders();
-
-            string json = JsonConvert.SerializeObject(orders, Formatting.Indented); 
+            string json = JsonConvert.SerializeObject(orders, Formatting.Indented);
             Console.WriteLine(json);
         }
+
+
+        // Quando não queremos construir nem mesmo objetos anonimos, podemos trabalhar com JToken:
+        private static void JTokenSample1()
+        {
+            string json = GetSerializedTransaction();
+
+            JToken jToken = JToken.Parse(json);
+
+            JToken primeiraOrdem = jToken["Orders"]?.First();
+            string nomeClientePrimeiraOrdem = jToken["Orders"]?.First()["Customer"]["Name"]?.ToString();
+            string nomeRuaEnderecoClientePrimeiraOrdem = jToken["Orders"].First()["Customer"]["Address"]["Street"]?.ToString();
+            Address enderecoClientePrimeiraOrdem = jToken["Orders"]?.First()["Customer"]["Address"]?.ToObject<Address>();
+        }
+
+
+        private static void JTokenSample2()
+        {
+            string json = GetSerializedTransaction();
+
+            // Converte a string JSON para um JToken
+            JToken jToken = JToken.Parse(json);
+
+            JToken segundaOrdem = jToken.SelectToken("Orders[1]");
+            string nomeClienteSegundaOrdem = jToken.SelectToken("Orders[1].Customer.Name")?.ToString();
+            string nomeRuaEnderecoClienteSegundaOrdem = jToken.SelectToken("Orders[1].Customer.Address.Street")?.ToString();
+            Address enderecoClientePrimeiraOrdem = jToken.SelectToken("Orders[1].Customer.Address")?.ToObject<Address>();
+        }
+
+
+        private static string GetSerializedTransaction()
+        {
+            var transaction = Initialize.GetTransaction();
+            string json = JsonConvert.SerializeObject(transaction);
+            return json;
+        }
+
 
         private static void WriterFile()
         {
             List<Order> orders = Initialize.InitOrders();
             File.WriteAllText(@"./orders.json", JsonConvert.SerializeObject(orders));
-            
+
             using (StreamWriter file = File.CreateText(@"./orders.json"))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Serialize(file, orders);
             }
         }
-
-        private static void AnonymousType()
-        {
-            var definition = new { Name = "" };
-
-            string json1 = @"{'Name':'James'}";
-            var customer1 = JsonConvert.DeserializeAnonymousType(json1, definition);
-
-            Console.WriteLine(customer1.Name);
-        }
-        
     }
 }
